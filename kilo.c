@@ -16,9 +16,9 @@ void enableRawMode() {
     atexit(disableRawMode);
     struct termios raw = orig_termios;
     
-    // c_lflag handles local flags
-    // there are also input, output, and control flags
-    raw.c_lflag &= ~(ECHO);
+    // c_lflag handles local flags - there are also input, output, and control flags
+    // turn off echoing and canonical (\n to actually enter input)
+    raw.c_lflag &= ~(ECHO | ICANON);
 
     // Set attributes on stdin, after stdin is flushed
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
