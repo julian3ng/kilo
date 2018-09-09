@@ -1,3 +1,5 @@
+#include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
@@ -18,7 +20,7 @@ void enableRawMode() {
     
     // c_lflag handles local flags - there are also input, output, and control flags
     // turn off echoing and canonical (\n to actually enter input)
-    raw.c_lflag &= ~(ECHO | ICANON);
+    raw.c_lflag &= ~(ECHO | ICANON | ISIG);
 
     // Set attributes on stdin, after stdin is flushed
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
@@ -29,6 +31,13 @@ int main(void) {
     enableRawMode();
 
     char c;
-    while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q');
+    while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') {
+        if (iscntrl(c)) {
+            printf("%d\n", c);
+        } else {
+            printf("%d ('%c')\n", c, c);
+        }
+        
+    }
     return 0;
 }
