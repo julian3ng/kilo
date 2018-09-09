@@ -18,9 +18,26 @@ void enableRawMode() {
     atexit(disableRawMode);
     struct termios raw = orig_termios;
     
-    // c_lflag handles local flags - there are also input, output, and control flags
+    // c_[iocl]flag handles input, output, control, and local (misc) flags
+
+    // turn off break conditions sending SIGINT
+    // turn off carriage return newline (C-m is now 13, not 10)
+    // turn off parity checking?
+    // turn off setting 8th bit of every byte to 0
+    // turn off transmission stuff (IXON C-s, C-q)
+    raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+
+    // turn off output newline carriage return
+    // ("\n" doesn't translate to "\r\n" anymore)
+    raw.c_oflag &= ~(OPOST);
+
+    // set character size to 8 bits per byte
+    raw.c_cflag |= (CS8);
+
+    
     // turn off echoing and canonical (\n to actually enter input)
-    raw.c_lflag &= ~(ECHO | ICANON | ISIG);
+    // turn off C-v sending next literal
+    raw.c_lflag &= ~(ECHO | ICANON | ISIG | IEXTEN);
 
     // Set attributes on stdin, after stdin is flushed
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
@@ -33,9 +50,9 @@ int main(void) {
     char c;
     while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') {
         if (iscntrl(c)) {
-            printf("%d\n", c);
+            printf("%d\r\n", c);
         } else {
-            printf("%d ('%c')\n", c, c);
+            printf("%d ('%c')\r\n", c, c);
         }
         
     }
